@@ -1,0 +1,16 @@
+#!/bin/bash
+
+## Script to check *possible* outgoing attacks from user scripts
+## Author: Seff Parker
+## Version: 20200707
+
+LIMIT=15
+
+CONN_LIST=$(/usr/sbin/lsof -u ^root -a -u ^nobody -a -i:80 -i:443 | grep -vP "${HOSTNAME}.*${HOSTNAME}")
+CONN_COUNT=$(echo "$CONN_LIST" | wc -l)
+
+if [[ $CONN_COUNT -gt $LIMIT ]]
+	then
+	echo "Suspicious outbound connections: $CONN_COUNT"
+	echo "$CONN_LIST"
+fi
