@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Script to print or enter to the Document Root of a domain on a cPanel server
+# Author: Seff P.
+# Version: 20200503
+
+CP_UDD=/etc/userdatadomains
+
+if [ -z $1 ]
+        then read -p "Enter domain name: " DOMAIN
+        if [ -z $DOMAIN ]
+                then echo "ERROR: Required Data Missing!"
+                exit 1
+        fi
+else
+        DOMAIN=$1
+fi
+
+DOMAIN=$(echo ${DOMAIN,,} | sed 's/\.*$//g')
+
+DOC_ROOT=$(awk -v DOMAIN="^$DOMAIN:" -F "==" '$0~DOMAIN {print $5; exit}' $CP_UDD)
+
+if [ "$DOC_ROOT" ]
+        then echo "Document Root of $DOMAIN: $DOC_ROOT"
+        cd ${DOC_ROOT} &> /dev/null
+else
+        echo "ERROR: Domain $DOMAIN not found in this server!"
+fi
