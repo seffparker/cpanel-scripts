@@ -2,7 +2,7 @@
 
 # Script to print or enter to the Document Root of a domain on a cPanel server
 # Author: Seff P.
-# Version: 20200503
+# Version: 20200808
 
 CP_UDD=/etc/userdatadomains
 
@@ -16,7 +16,7 @@ else
         DOMAIN=$1
 fi
 
-DOMAIN=$(echo ${DOMAIN,,} | sed 's/\.*$//g')
+DOMAIN=$(echo ${DOMAIN} | sed -E 's|^.*//||g' | sed 's|^www\.||g' | cut -d'/' -f1 | sed 's/\.*$//g')
 
 DOC_ROOT=$(awk -v DOMAIN="^$DOMAIN:" -F "==" '$0~DOMAIN {print $5; exit}' $CP_UDD)
 
