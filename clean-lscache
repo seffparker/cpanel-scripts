@@ -1,0 +1,11 @@
+#!/bin/bash
+
+## Script to clean older LiteSpeed cache files
+## Author: Seff P.
+## Version: 20191227
+
+DELETE_MIN="1440" # 24 hour
+
+echo -n "INFO: Deleting LS caches not accessed in last ${DELETE_MIN} minutes: "
+DEL_COUNT=$(find /home/*/lscache -type f -amin +${DELETE_MIN} -print -delete | grep -c .)
+echo "${DEL_COUNT} files removed"
