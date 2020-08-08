@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Script to clean Magento PHP session files stored under user's document root
+# Author: Seff P.
+# Version: 20200531
+
+
+DOC_ROOTS=$(awk -F "==" '{print $5}' /etc/userdatadomains)
+CLEAN_AGE="480" # minutes
+
+
+for DOC_ROOT in $DOC_ROOTS
+        do
+        echo -n "Scanning under $DOC_ROOT "
+        COUNT=$(find $DOC_ROOT/var/session/ $DOC_ROOT/*/var/session/ -name "sess_*" -amin +${CLEAN_AGE} -type f -delete -print 2> /dev/null | wc -l)
+        let COUNT_TOTAL=${COUNT_TOTAL}+${COUNT}
+        echo "($COUNT session files removed)" 
+done
+
+echo "----"
+echo "Total $COUNT_TOTAL session files removed."
