@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Script to re-enable ModSecurity for Magento via .htaccess
+# that comes disabled out-of-the-box
+#
+# Author: Seff P
+# Version: 20200627
+
+
+RULE="SecFilterEngine Off"
+CP_UDD=/etc/userdatadomains
+
+process_htacess () {
+IFS=$'\n'
+for DOCROOT in $(awk -F "==" '{print $5}' $CP_UDD)
+        do
+        echo "Scanning under $DOCROOT ..."
+        for HTACCESS in $(find $DOCROOT -maxdepth 2 -type f -name .htaccess)
+                do
+                echo "  Found .htaccess at $HTACCESS"
+                for ACTIVE in $(grep -P "^\s*${RULE}" $HTACCESS)
+                        do
+                        if [[ $MODE == "SCAN" ]]
+                                then
+                                echo ">   Not enabled in $HTACCESS ..."
+                        elif [[ $MODE == "ENABLE" ]]
+                                then
+                                echo ">   Enabling in $HTACCESS ..."
+                                /bin/cp -pf $HTACCESS ${HTACCESS}_mage-modsec
+                                COMMENTED=$(echo $ACTIVE | sed "s/${RULE}/# ${RULE}/g")
+                                sed -i "s/^${ACTIVE}$/${COMMENTED} # Commented by mage-modsec on $(date)/g" $HTACCESS
+                                CHANGED=true
+                        fi
+                done
+        done
+        echo
+done
+}
+
+case $1 in
+        -s)
+                MODE=SCAN
+                process_htacess
+                ;;
+        -e)
+                MODE=ENABLE
+                CHANGED=false
+                process_htacess
+                $CHANGED && exit 2 || exit 0
+                ;;
+        *)
+                echo "Usage: -s scan | -e enable"
+                exit 1
+                ;;
+esac
