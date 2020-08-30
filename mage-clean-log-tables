@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Clear log tables from given Magento 1 Magento 2 databases
+#
+# Author: Seff Parker
+# Version: 20200830
+
+DB_DIR="/var/lib/mysql"
+DBS=$*
+TEST_TABLE="report_event"
+
+LOG_TABLES="log_url log_url_info log_visitor log_visitor_info cron_schedule customer_log customer_visitor report_event report_compared_product_index report_viewed_product_index core_session"
+
+for DB in $DBS
+	do
+	TABLE_CHECK=$(mysql $DB -e "show tables like '%${TEST_TABLE}';" -B 2> /dev/null | grep -P "${TEST_TABLE}$")
+	if [[ -z $TABLE_CHECK ]]
+		then
+		echo "ERROR: No Magento tables found in the database $DB"
+	else
+		SIZE_BEFORE=$(du -sh ${DB_DIR}/${DB} | cut -f1)
+		TABLE_PREFIX=$(echo "$TABLE_CHECK" | sed "s/${TEST_TABLE}//g")
+		for LOG_TABLE in ${LOG_TABLES}
+			do
+			echo -n "${DB}.${TABLE_PREFIX}${LOG_TABLE} - "
+			if mysql $DB -e "truncate ${TABLE_PREFIX}${LOG_TABLE};" &> /dev/null
+				then echo DONE
+			else
+				echo SKIP
+			fi
+		done
+		SIZE_AFTER=$(du -sh ${DB_DIR}/${DB} | cut -f1)
+		echo "$DB Size: $SIZE_BEFORE -> $SIZE_AFTER"
+	fi
+	echo
+done
